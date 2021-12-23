@@ -1,15 +1,16 @@
-package GoogleSheets4Go
+package googlesheets4go
 
 import (
 	"context"
 	"fmt"
-	"google.golang.org/api/googleapi"
-	"google.golang.org/api/option"
-	"google.golang.org/api/sheets/v4"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"google.golang.org/api/googleapi"
+	"google.golang.org/api/option"
+	"google.golang.org/api/sheets/v4"
 )
 
 var ctx = context.Background()

@@ -1,4 +1,4 @@
-module GoogleSheets4Go
+module github.com/boom3k/googlesheets4go
 
 go 1.17
 
