@@ -15,8 +15,8 @@ import (
 
 var ctx = context.Background()
 
-func Initialize(client *http.Client, subject string) *GoogleSheets {
-	service, err := sheets.NewService(ctx, option.WithHTTPClient(client))
+func Initialize(option *option.ClientOption, subject string) *GoogleSheets {
+	service, err := sheets.NewService(ctx, *option)
 	if err != nil {
 		log.Println(err.Error())
 		panic(err)
