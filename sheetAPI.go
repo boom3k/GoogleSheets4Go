@@ -3,20 +3,20 @@ package googlesheets4go
 import (
 	"context"
 	"fmt"
+	"google.golang.org/api/option"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"google.golang.org/api/googleapi"
-	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
 
 var ctx = context.Background()
 
-func Initialize(option *option.ClientOption, subject string) *GoogleSheets {
-	service, err := sheets.NewService(ctx, *option)
+func Build(client *http.Client, subject string) *GoogleSheets {
+	service, err := sheets.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		log.Println(err.Error())
 		panic(err)
