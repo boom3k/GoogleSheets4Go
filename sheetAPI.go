@@ -13,23 +13,23 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
-func Build(client *http.Client, subject string, context *context.Context) *GoogleSheets {
+func Build(client *http.Client, subject string, context *context.Context) *SheetsAPI {
 	service, err := sheets.NewService(*context, option.WithHTTPClient(client))
 	if err != nil {
 		log.Println(err.Error())
 		panic(err)
 	}
 
-	log.Printf("Initialized GoogleSheets4go as (%s)\n", subject)
-	return &GoogleSheets{Service: service, Subject: subject}
+	log.Printf("Initialized GoogleSheets4go <%s> as (%s)\n", subject)
+	return &SheetsAPI{Service: service, Subject: subject}
 }
 
-type GoogleSheets struct {
+type SheetsAPI struct {
 	Service *sheets.Service
 	Subject string
 }
 
-func (receiver *GoogleSheets) PrintToSheet(spreadsheetId, a1Notation, majorDimension string, values [][]interface{}, overwrite bool) interface{} {
+func (receiver *SheetsAPI) PrintToSheet(spreadsheetId, a1Notation, majorDimension string, values [][]interface{}, overwrite bool) interface{} {
 	var valueRange sheets.ValueRange
 	valueRange.MajorDimension = strings.ToUpper(majorDimension)
 	valueRange.Values = values
@@ -56,7 +56,7 @@ func (receiver *GoogleSheets) PrintToSheet(spreadsheetId, a1Notation, majorDimen
 	return response
 }
 
-func (receiver *GoogleSheets) CreateSpreadsheet(spreadsheetName string) *sheets.Spreadsheet {
+func (receiver *SheetsAPI) CreateSpreadsheet(spreadsheetName string) *sheets.Spreadsheet {
 	ss := &sheets.Spreadsheet{}
 	ss.Properties = &sheets.SpreadsheetProperties{Title: spreadsheetName}
 	response, err := receiver.Service.Spreadsheets.Create(ss).Fields("*").Do()
@@ -68,7 +68,7 @@ func (receiver *GoogleSheets) CreateSpreadsheet(spreadsheetName string) *sheets.
 	return response
 }
 
-func (receiver *GoogleSheets) CreateSheet(spreadsheetId, newSheetName string) *sheets.BatchUpdateSpreadsheetResponse {
+func (receiver *SheetsAPI) CreateSheet(spreadsheetId, newSheetName string) *sheets.BatchUpdateSpreadsheetResponse {
 	properties := &sheets.SheetProperties{Title: newSheetName}
 	addSheetsRequest := &sheets.AddSheetRequest{Properties: properties}
 	request := []*sheets.Request{{AddSheet: addSheetsRequest}}
@@ -81,7 +81,7 @@ func (receiver *GoogleSheets) CreateSheet(spreadsheetId, newSheetName string) *s
 	return response
 }
 
-func (receiver *GoogleSheets) RenameSheet(spreadsheet *sheets.Spreadsheet, oldSheetName, newSheetName string) *sheets.BatchUpdateSpreadsheetResponse {
+func (receiver *SheetsAPI) RenameSheet(spreadsheet *sheets.Spreadsheet, oldSheetName, newSheetName string) *sheets.BatchUpdateSpreadsheetResponse {
 	sheetId := receiver.GetSheetByName(spreadsheet, oldSheetName).Properties.SheetId
 	sheetProperties := &sheets.SheetProperties{Title: newSheetName, SheetId: sheetId}
 	updateSheetPropertiesRequest := &sheets.UpdateSheetPropertiesRequest{Properties: sheetProperties, Fields: "title"}
@@ -95,7 +95,7 @@ func (receiver *GoogleSheets) RenameSheet(spreadsheet *sheets.Spreadsheet, oldSh
 	return response
 }
 
-func (receiver *GoogleSheets) GetSheetValues(spreadsheetId, a1Notation string) [][]interface{} {
+func (receiver *SheetsAPI) GetSheetValues(spreadsheetId, a1Notation string) [][]interface{} {
 	sheetOutputValues, err := receiver.Service.Spreadsheets.Values.Get(spreadsheetId, a1Notation).Do()
 	if err != nil {
 		log.Println(err.Error())
@@ -104,7 +104,7 @@ func (receiver *GoogleSheets) GetSheetValues(spreadsheetId, a1Notation string) [
 	return sheetOutputValues.Values
 }
 
-func (receiver *GoogleSheets) GetColumnValues(spreadsheetId, a1Notation string) []interface{} {
+func (receiver *SheetsAPI) GetColumnValues(spreadsheetId, a1Notation string) []interface{} {
 	sheetOutputValues, err := receiver.Service.Spreadsheets.Values.Get(spreadsheetId, a1Notation).Do()
 	if err != nil {
 		log.Println(err.Error())
@@ -121,7 +121,7 @@ func (receiver *GoogleSheets) GetColumnValues(spreadsheetId, a1Notation string) 
 	return columnValues
 }
 
-func (receiver *GoogleSheets) GetColumnValuesAsStringMap(spreadsheetId, a1Notation string, toLower bool) map[string]bool {
+func (receiver *SheetsAPI) GetColumnValuesAsStringMap(spreadsheetId, a1Notation string, toLower bool) map[string]bool {
 	m := make(map[string]bool)
 	for _, s := range receiver.GetColumnValuesAsString(spreadsheetId, a1Notation, toLower) {
 		if m[s] == false {
@@ -131,7 +131,7 @@ func (receiver *GoogleSheets) GetColumnValuesAsStringMap(spreadsheetId, a1Notati
 	return m
 }
 
-func (receiver *GoogleSheets) GetColumnValuesAsString(spreadsheetId, a1Notation string, toLower bool) []string {
+func (receiver *SheetsAPI) GetColumnValuesAsString(spreadsheetId, a1Notation string, toLower bool) []string {
 	sheetOutputValues, err := receiver.Service.Spreadsheets.Values.Get(spreadsheetId, a1Notation).Do()
 	if err != nil {
 		log.Println(err.Error())
@@ -153,7 +153,7 @@ func (receiver *GoogleSheets) GetColumnValuesAsString(spreadsheetId, a1Notation 
 	return columnValues
 }
 
-func (receiver *GoogleSheets) GetSheetByName(spreadsheet *sheets.Spreadsheet, sheetName string) *sheets.Sheet {
+func (receiver *SheetsAPI) GetSheetByName(spreadsheet *sheets.Spreadsheet, sheetName string) *sheets.Sheet {
 	for _, sheet := range spreadsheet.Sheets {
 		if sheet.Properties.Title == sheetName {
 			return sheet
