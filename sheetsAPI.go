@@ -166,3 +166,13 @@ func (receiver *SheetsAPI) GetSheetByName(spreadsheet *sheets.Spreadsheet, sheet
 	log.Println(googleapi.Error{Body: "Sheet SendEmail " + sheetName + " not found in SpreadsheetID: " + spreadsheet.SpreadsheetId, Message: "Sheet not found"})
 	return nil
 }
+
+func (receiver *SheetsAPI) ClearValues(spreadsheetID, a1Notation string) *sheets.ClearValuesResponse {
+	response, err := receiver.Service.Spreadsheets.Values.Clear(spreadsheetID, a1Notation, nil).Fields("*").Do()
+	if err != nil {
+		log.Println(err.Error())
+		return nil
+	}
+	log.Printf("Cleared %s [%s]\n", spreadsheetID, a1Notation)
+	return response
+}
