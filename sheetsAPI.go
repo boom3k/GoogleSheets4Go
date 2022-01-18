@@ -168,7 +168,7 @@ func (receiver *SheetsAPI) GetSheetByName(spreadsheet *sheets.Spreadsheet, sheet
 }
 
 func (receiver *SheetsAPI) ClearValues(spreadsheetID, a1Notation string) *sheets.ClearValuesResponse {
-	response, err := receiver.Service.Spreadsheets.Values.Clear(spreadsheetID, a1Notation, nil).Fields("*").Do()
+	response, err := receiver.Service.Spreadsheets.Values.Clear(spreadsheetID, a1Notation, &sheets.ClearValuesRequest{}).Fields("*").Do()
 	if err != nil {
 		log.Println(err.Error())
 		return nil
