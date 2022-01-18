@@ -19,9 +19,13 @@ func (receiver *SheetsAPI) Build(client *http.Client, subject string, context *c
 		log.Println(err.Error())
 		panic(err)
 	}
-
-	log.Printf("Initialized GoogleSheets4go <%s> as (%s)\n", subject)
-	return &SheetsAPI{Service: service, Subject: subject}
+	receiver.Service = service
+	receiver.Subject = subject
+	log.Printf("SheetAPI --> \n"+
+		"\tService: %s\n"+
+		"\tUserEmail: %s\n", receiver.Service.BasePath, receiver.Subject,
+	)
+	return receiver
 }
 
 type SheetsAPI struct {
