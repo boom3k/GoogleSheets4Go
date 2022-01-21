@@ -79,7 +79,7 @@ func (receiver *SheetsAPI) RenameSpreadSheet(spreadsheetId, newTitle string) (*s
 	request := &sheets.Request{UpdateSpreadsheetProperties: updateSpreadsheetPropertiesRequest}
 	var requests = []*sheets.Request{request}
 	batchUpdateSpreadsheetRequest := &sheets.BatchUpdateSpreadsheetRequest{Requests: requests}
-	response, err := receiver.Service.Spreadsheets.BatchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest).Do()
+	response, err := receiver.Service.Spreadsheets.BatchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest).Fields("*").Do()
 	if err != nil {
 		log.Println(err, err.Error())
 	}
