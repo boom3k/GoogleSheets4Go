@@ -72,6 +72,21 @@ func (receiver *SheetsAPI) CreateSpreadsheet(spreadsheetName string) *sheets.Spr
 	return response
 }
 
+func (receiver *SheetsAPI) RenameSpreadSheet(spreadsheetId, newTitle string) (*sheets.Spreadsheet, error) {
+
+	spreadsheetProperties := &sheets.SpreadsheetProperties{Title: newTitle}
+	updateSpreadsheetPropertiesRequest := &sheets.UpdateSpreadsheetPropertiesRequest{Properties: spreadsheetProperties, Fields: "*"}
+	request := &sheets.Request{UpdateSpreadsheetProperties: updateSpreadsheetPropertiesRequest}
+	var requests = []*sheets.Request{request}
+	batchUpdateSpreadsheetRequest := &sheets.BatchUpdateSpreadsheetRequest{Requests: requests}
+	response, err := receiver.Service.Spreadsheets.BatchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest).Fields("*").Do()
+	if err != nil {
+		log.Println(err, err.Error())
+	}
+	log.Printf("Renamed SpreadsheetID: [%s] is now \"%s\"\n", spreadsheetId, response.UpdatedSpreadsheet.Properties.Title)
+	return response.UpdatedSpreadsheet, err
+}
+
 func (receiver *SheetsAPI) CreateSheet(spreadsheetId, newSheetName string) *sheets.BatchUpdateSpreadsheetResponse {
 	properties := &sheets.SheetProperties{Title: newSheetName}
 	addSheetsRequest := &sheets.AddSheetRequest{Properties: properties}
@@ -85,8 +100,8 @@ func (receiver *SheetsAPI) CreateSheet(spreadsheetId, newSheetName string) *shee
 	return response
 }
 
-func (receiver *SheetsAPI) RenameSheet(spreadsheet *sheets.Spreadsheet, oldSheetName, newSheetName string) *sheets.BatchUpdateSpreadsheetResponse {
-	sheetId := receiver.GetSheetByName(spreadsheet, oldSheetName).Properties.SheetId
+func (receiver *SheetsAPI) RenameTab(spreadsheet *sheets.Spreadsheet, oldSheetName, newSheetName string) *sheets.BatchUpdateSpreadsheetResponse {
+	sheetId := receiver.GetSheetByTabName(spreadsheet, oldSheetName).Properties.SheetId
 	sheetProperties := &sheets.SheetProperties{Title: newSheetName, SheetId: sheetId}
 	updateSheetPropertiesRequest := &sheets.UpdateSheetPropertiesRequest{Properties: sheetProperties, Fields: "title"}
 	request := []*sheets.Request{{UpdateSheetProperties: updateSheetPropertiesRequest}}
@@ -157,7 +172,7 @@ func (receiver *SheetsAPI) GetColumnValuesAsString(spreadsheetId, a1Notation str
 	return columnValues
 }
 
-func (receiver *SheetsAPI) GetSheetByName(spreadsheet *sheets.Spreadsheet, sheetName string) *sheets.Sheet {
+func (receiver *SheetsAPI) GetSheetByTabName(spreadsheet *sheets.Spreadsheet, sheetName string) *sheets.Sheet {
 	for _, sheet := range spreadsheet.Sheets {
 		if sheet.Properties.Title == sheetName {
 			return sheet
