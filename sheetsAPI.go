@@ -72,26 +72,19 @@ func (receiver *SheetsAPI) CreateSpreadsheet(spreadsheetName string) *sheets.Spr
 	return response
 }
 
-func (receiver *SheetsAPI) RenameSpreadSheet(spreadsheetId, newTitle string) (*sheets.BatchUpdateSpreadsheetResponse, error) {
-	spreadsheet, err := receiver.Service.Spreadsheets.Get(spreadsheetId).Fields("*").Do()
-	if err != nil {
-		log.Println(err.Error())
-		return nil, err
-	}
+func (receiver *SheetsAPI) RenameSpreadSheet(spreadsheetId, newTitle string) (*sheets.Spreadsheet, error) {
 
-	log.Printf("Renaming SpreadsheetID: [%s] from \"%s\" to \"%s\"\n", spreadsheetId, spreadsheet.Properties.Title, newTitle)
-	spreadsheet.Properties.Title = newTitle
-	request := &sheets.Request{}
-	request.UpdateSpreadsheetProperties.Properties = spreadsheet.Properties
+	spreadsheetProperties := &sheets.SpreadsheetProperties{Title: newTitle}
+	updateSpreadsheetPropertiesRequest := &sheets.UpdateSpreadsheetPropertiesRequest{Properties: spreadsheetProperties, Fields: "*"}
+	request := &sheets.Request{UpdateSpreadsheetProperties: updateSpreadsheetPropertiesRequest}
 	var requests = []*sheets.Request{request}
 	batchUpdateSpreadsheetRequest := &sheets.BatchUpdateSpreadsheetRequest{Requests: requests}
-	response, err := receiver.Service.Spreadsheets.BatchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest).Fields("*").Do()
+	response, err := receiver.Service.Spreadsheets.BatchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest).Do()
 	if err != nil {
 		log.Println(err, err.Error())
-		return nil, err
 	}
-	log.Printf("Renamed SpreadsheetID: [%s] is now \"%s\"\n", spreadsheetId, spreadsheet.Properties.Title)
-	return response, err
+	log.Printf("Renamed SpreadsheetID: [%s] is now \"%s\"\n", spreadsheetId, response.UpdatedSpreadsheet.Properties.Title)
+	return response.UpdatedSpreadsheet, err
 }
 
 func (receiver *SheetsAPI) CreateSheet(spreadsheetId, newSheetName string) *sheets.BatchUpdateSpreadsheetResponse {
