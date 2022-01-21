@@ -82,12 +82,12 @@ func (receiver *SheetsAPI) RenameSpreadSheet(spreadsheetId, newTitle string) (*s
 	log.Printf("Renaming SpreadsheetID: [%s] from \"%s\" to \"%s\"\n", spreadsheetId, spreadsheet.Properties.Title, newTitle)
 	spreadsheet.Properties.Title = newTitle
 	request := &sheets.Request{}
-	request.UpdateSpreadsheetProperties = &sheets.UpdateSpreadsheetPropertiesRequest{Properties: spreadsheet.Properties}
+	request.UpdateSpreadsheetProperties.Properties = spreadsheet.Properties
 	var requests = []*sheets.Request{request}
 	batchUpdateSpreadsheetRequest := &sheets.BatchUpdateSpreadsheetRequest{Requests: requests}
 	response, err := receiver.Service.Spreadsheets.BatchUpdate(spreadsheetId, batchUpdateSpreadsheetRequest).Fields("*").Do()
 	if err != nil {
-		log.Println(err.Error())
+		log.Println(err, err.Error())
 		return nil, err
 	}
 	log.Printf("Renamed SpreadsheetID: [%s] is now \"%s\"\n", spreadsheetId, spreadsheet.Properties.Title)
