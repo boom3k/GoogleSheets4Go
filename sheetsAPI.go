@@ -83,7 +83,7 @@ func (receiver *SheetsAPI) RenameSpreadSheet(spreadsheetId, newTitle string) (*s
 	if err != nil {
 		log.Println(err, err.Error())
 	}
-	log.Printf("Renamed SpreadsheetID: [%s] is now \"%s\"\n", spreadsheetId, response.UpdatedSpreadsheet.Properties.Title)
+	log.Printf("Renamed SpreadsheetID: [%s] is now \"%s\"\n", spreadsheetId, newTitle)
 	return response.UpdatedSpreadsheet, err
 }
 
