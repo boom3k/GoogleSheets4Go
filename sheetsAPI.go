@@ -13,8 +13,8 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
-func (receiver *SheetsAPI) Build(client *http.Client, subject string, context *context.Context) *SheetsAPI {
-	service, err := sheets.NewService(*context, option.WithHTTPClient(client))
+func (receiver *SheetsAPI) Build(client *http.Client, subject string, context context.Context) *SheetsAPI {
+	service, err := sheets.NewService(context, option.WithHTTPClient(client))
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
