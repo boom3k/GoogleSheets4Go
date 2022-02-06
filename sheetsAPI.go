@@ -149,20 +149,18 @@ func (receiver *SheetsAPI) GetColumnValues(spreadsheetId, a1Notation string) []i
 	return columnValues
 }
 
-func (receiver *SheetsAPI) GetSheetValuesMapped(spreadsheetId, a1Notation string, keyColumn int) map[interface{}][]interface{} {
-	m := make(map[interface{}][]interface{})
+// GetSheetValuesMapped Returns Values with a given primary column as a map
+func (receiver *SheetsAPI) GetSheetValuesMapped(spreadsheetId, a1Notation string, keyColumn int) map[interface{}][][]interface{} {
+	m := make(map[interface{}][][]interface{})
 	for _, row := range receiver.GetSheetValues(spreadsheetId, a1Notation) {
-		key := row[keyColumn]
-		row = append(row[:keyColumn], row[keyColumn+1:]...)
-		var values []interface{}
-		for _, cell := range row {
-			values = append(values, cell)
+		var rowCells []interface{}
+		for i, cell := range row {
+			if i == keyColumn {
+				continue
+			}
+			rowCells = append(rowCells, cell)
 		}
-		if m[key] == nil {
-			m[key] = values
-		} else {
-			m[key] = append(m[key], values)
-		}
+		m[row[keyColumn]] = append(m[row[keyColumn]], rowCells)
 	}
 	return m
 }
