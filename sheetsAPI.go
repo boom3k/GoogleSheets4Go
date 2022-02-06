@@ -16,8 +16,7 @@ import (
 func (receiver *SheetsAPI) Build(client *http.Client, subject string, context *context.Context) *SheetsAPI {
 	service, err := sheets.NewService(*context, option.WithHTTPClient(client))
 	if err != nil {
-		log.Println(err.Error())
-		panic(err)
+		log.Fatalf(err.Error())
 	}
 	receiver.Service = service
 	receiver.Subject = subject
@@ -60,15 +59,14 @@ func (receiver *SheetsAPI) PrintToSheet(spreadsheetId, a1Notation, majorDimensio
 	return response
 }
 
-func (receiver *SheetsAPI) CreateSpreadsheet(spreadsheetName string) *sheets.Spreadsheet {
+func (receiver *SheetsAPI) CreateSpreadsheet(spreadtabName string) *sheets.Spreadsheet {
 	ss := &sheets.Spreadsheet{}
-	ss.Properties = &sheets.SpreadsheetProperties{Title: spreadsheetName}
+	ss.Properties = &sheets.SpreadsheetProperties{Title: spreadtabName}
 	response, err := receiver.Service.Spreadsheets.Create(ss).Fields("*").Do()
 	if err != nil {
-		log.Println(err.Error())
-		panic(err)
+		log.Fatalf(err.Error())
 	}
-	log.Println("Created spreadsheet -> ", spreadsheetName, " [", response.SpreadsheetId, "] @ "+response.SpreadsheetUrl)
+	log.Println("Created spreadsheet -> ", spreadtabName, " [", response.SpreadsheetId, "] @ "+response.SpreadsheetUrl)
 	return response
 }
 
@@ -87,38 +85,39 @@ func (receiver *SheetsAPI) RenameSpreadSheet(spreadsheetId, newTitle string) (*s
 	return response.UpdatedSpreadsheet, err
 }
 
-func (receiver *SheetsAPI) CreateSheet(spreadsheetId, newSheetName string) *sheets.BatchUpdateSpreadsheetResponse {
-	properties := &sheets.SheetProperties{Title: newSheetName}
+func (receiver *SheetsAPI) InsertTab(spreadsheetId, newtabName string) *sheets.BatchUpdateSpreadsheetResponse {
+	properties := &sheets.SheetProperties{Title: newtabName}
 	addSheetsRequest := &sheets.AddSheetRequest{Properties: properties}
 	request := []*sheets.Request{{AddSheet: addSheetsRequest}}
 	content := &sheets.BatchUpdateSpreadsheetRequest{Requests: request}
 	response, err := receiver.Service.Spreadsheets.BatchUpdate(spreadsheetId, content).Fields("*").Do()
 	if err != nil {
-		log.Println(err.Error())
-		panic(err)
+		log.Fatalf(err.Error())
 	}
 	return response
 }
 
-func (receiver *SheetsAPI) RenameTab(spreadsheet *sheets.Spreadsheet, oldSheetName, newSheetName string) *sheets.BatchUpdateSpreadsheetResponse {
-	sheetId := receiver.GetSheetByTabName(spreadsheet, oldSheetName).Properties.SheetId
-	sheetProperties := &sheets.SheetProperties{Title: newSheetName, SheetId: sheetId}
+func (receiver *SheetsAPI) RenameTab(spreadsheetId, newTabName string, tabID int64) (*sheets.BatchUpdateSpreadsheetResponse, error) {
+	sheetProperties := &sheets.SheetProperties{Title: newTabName, SheetId: tabID}
 	updateSheetPropertiesRequest := &sheets.UpdateSheetPropertiesRequest{Properties: sheetProperties, Fields: "title"}
-	request := []*sheets.Request{{UpdateSheetProperties: updateSheetPropertiesRequest}}
-	content := &sheets.BatchUpdateSpreadsheetRequest{Requests: request}
-	response, err := receiver.Service.Spreadsheets.BatchUpdate(spreadsheet.SpreadsheetId, content).Fields("*").Do()
-	if err != nil {
-		log.Println(err.Error())
-		panic(err)
-	}
-	return response
+	requests := []*sheets.Request{{UpdateSheetProperties: updateSheetPropertiesRequest}}
+	return receiver.ExecuteBatchUpdateRequest(spreadsheetId, requests)
+}
+
+func (receiver *SheetsAPI) DeleteTabByName(spreadsheetId string, tabId int64) (*sheets.BatchUpdateSpreadsheetResponse, error) {
+	requests := []*sheets.Request{{DeleteSheet: &sheets.DeleteSheetRequest{SheetId: tabId}}}
+	return receiver.ExecuteBatchUpdateRequest(spreadsheetId, requests)
+}
+
+func (receiver *SheetsAPI) ExecuteBatchUpdateRequest(spreadsheetId string, requests []*sheets.Request) (*sheets.BatchUpdateSpreadsheetResponse, error) {
+	content := &sheets.BatchUpdateSpreadsheetRequest{Requests: requests}
+	return receiver.Service.Spreadsheets.BatchUpdate(spreadsheetId, content).Fields("*").Do()
 }
 
 func (receiver *SheetsAPI) GetSheetValues(spreadsheetId, a1Notation string) [][]interface{} {
 	sheetOutputValues, err := receiver.Service.Spreadsheets.Values.Get(spreadsheetId, a1Notation).Do()
 	if err != nil {
-		log.Println(err.Error())
-		panic(err)
+		log.Fatalf(err.Error())
 	}
 	return sheetOutputValues.Values
 }
@@ -126,8 +125,7 @@ func (receiver *SheetsAPI) GetSheetValues(spreadsheetId, a1Notation string) [][]
 func (receiver *SheetsAPI) GetColumnValues(spreadsheetId, a1Notation string) []interface{} {
 	sheetOutputValues, err := receiver.Service.Spreadsheets.Values.Get(spreadsheetId, a1Notation).Do()
 	if err != nil {
-		log.Println(err.Error())
-		panic(err)
+		log.Fatalf(err.Error())
 	}
 	var columnValues []interface{}
 
@@ -153,8 +151,7 @@ func (receiver *SheetsAPI) GetColumnValuesAsStringMap(spreadsheetId, a1Notation 
 func (receiver *SheetsAPI) GetColumnValuesAsString(spreadsheetId, a1Notation string, toLower bool) []string {
 	sheetOutputValues, err := receiver.Service.Spreadsheets.Values.Get(spreadsheetId, a1Notation).Do()
 	if err != nil {
-		log.Println(err.Error())
-		panic(err)
+		log.Fatalf(err.Error())
 	}
 	var columnValues []string
 
@@ -172,13 +169,13 @@ func (receiver *SheetsAPI) GetColumnValuesAsString(spreadsheetId, a1Notation str
 	return columnValues
 }
 
-func (receiver *SheetsAPI) GetSheetByTabName(spreadsheet *sheets.Spreadsheet, sheetName string) *sheets.Sheet {
+func (receiver *SheetsAPI) GetSheetByTabName(spreadsheet *sheets.Spreadsheet, tabName string) *sheets.Sheet {
 	for _, sheet := range spreadsheet.Sheets {
-		if sheet.Properties.Title == sheetName {
+		if sheet.Properties.Title == tabName {
 			return sheet
 		}
 	}
-	log.Println(googleapi.Error{Body: "Sheet SendEmail " + sheetName + " not found in SpreadsheetID: " + spreadsheet.SpreadsheetId, Message: "Sheet not found"})
+	log.Println(googleapi.Error{Body: "Sheet SendEmail " + tabName + " not found in SpreadsheetID: " + spreadsheet.SpreadsheetId, Message: "Sheet not found"})
 	return nil
 }
 

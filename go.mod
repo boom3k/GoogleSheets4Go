@@ -1,6 +1,6 @@
 module github.com/boom3k/googlesheets4go
 
-go 1.17
+go 1.18
 
 require google.golang.org/api v0.63.0
 
