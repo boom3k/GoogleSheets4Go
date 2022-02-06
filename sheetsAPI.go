@@ -158,7 +158,11 @@ func (receiver *SheetsAPI) GetSheetValuesMapped(spreadsheetId, a1Notation string
 		for _, cell := range row {
 			values = append(values, cell)
 		}
-		m[key] = values
+		if m[key] == nil {
+			m[key] = values
+		} else {
+			m[key] = append(m[key], values)
+		}
 	}
 	return m
 }
