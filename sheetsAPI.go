@@ -149,12 +149,16 @@ func (receiver *SheetsAPI) GetColumnValues(spreadsheetId, a1Notation string) []i
 	return columnValues
 }
 
-func (receiver *SheetsAPI) GetColumnValuesAsStringMap(spreadsheetId, a1Notation string, toLower bool) map[string]bool {
-	m := make(map[string]bool)
-	for _, s := range receiver.GetColumnValuesAsString(spreadsheetId, a1Notation, toLower) {
-		if m[s] == false {
-			m[s] = true
+func (receiver *SheetsAPI) GetSheetValuesMapped(spreadsheetId, a1Notation string, keyColumn int) map[interface{}][]interface{} {
+	m := make(map[interface{}][]interface{})
+	for _, row := range receiver.GetSheetValues(spreadsheetId, a1Notation) {
+		key := row[keyColumn]
+		row = append(row[:keyColumn], row[keyColumn+1:]...)
+		var values []interface{}
+		for _, cell := range row {
+			values = append(values, cell)
 		}
+		m[key] = values
 	}
 	return m
 }
