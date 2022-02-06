@@ -104,9 +104,15 @@ func (receiver *SheetsAPI) RenameTab(spreadsheetId, newTabName string, tabID int
 	return receiver.ExecuteBatchUpdateRequest(spreadsheetId, requests)
 }
 
-func (receiver *SheetsAPI) DeleteTabByName(spreadsheetId string, tabId int64) (*sheets.BatchUpdateSpreadsheetResponse, error) {
+func (receiver *SheetsAPI) DeleteTabById(spreadsheetId string, tabId int64) (*sheets.BatchUpdateSpreadsheetResponse, error) {
 	requests := []*sheets.Request{{DeleteSheet: &sheets.DeleteSheetRequest{SheetId: tabId}}}
 	return receiver.ExecuteBatchUpdateRequest(spreadsheetId, requests)
+}
+
+func (receiver *SheetsAPI) DeleteTabByName(spreadsheet *sheets.Spreadsheet, tabName string) (*sheets.BatchUpdateSpreadsheetResponse, error) {
+	tab := receiver.GetByTabName(spreadsheet, tabName)
+	requests := []*sheets.Request{{DeleteSheet: &sheets.DeleteSheetRequest{SheetId: tab.Properties.SheetId}}}
+	return receiver.ExecuteBatchUpdateRequest(spreadsheet.SpreadsheetId, requests)
 }
 
 func (receiver *SheetsAPI) ExecuteBatchUpdateRequest(spreadsheetId string, requests []*sheets.Request) (*sheets.BatchUpdateSpreadsheetResponse, error) {
@@ -169,7 +175,7 @@ func (receiver *SheetsAPI) GetColumnValuesAsString(spreadsheetId, a1Notation str
 	return columnValues
 }
 
-func (receiver *SheetsAPI) GetSheetByTabName(spreadsheet *sheets.Spreadsheet, tabName string) *sheets.Sheet {
+func (receiver *SheetsAPI) GetByTabName(spreadsheet *sheets.Spreadsheet, tabName string) *sheets.Sheet {
 	for _, sheet := range spreadsheet.Sheets {
 		if sheet.Properties.Title == tabName {
 			return sheet
