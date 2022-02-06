@@ -109,7 +109,7 @@ func (receiver *SheetsAPI) DeleteTabById(spreadsheetId string, tabId int64) (*sh
 	return receiver.ExecuteBatchUpdateRequest(spreadsheetId, requests)
 }
 
-func (receiver *SheetsAPI) DeleteTabByName(spreadsheet *sheets.Spreadsheet, tabName string) (*sheets.BatchUpdateSpreadsheetResponse, error) {
+func (receiver *SheetsAPI) DeleteTabByName(spreadsheet sheets.Spreadsheet, tabName string) (*sheets.BatchUpdateSpreadsheetResponse, error) {
 	tab := receiver.GetByTabName(spreadsheet, tabName)
 	requests := []*sheets.Request{{DeleteSheet: &sheets.DeleteSheetRequest{SheetId: tab.Properties.SheetId}}}
 	return receiver.ExecuteBatchUpdateRequest(spreadsheet.SpreadsheetId, requests)
@@ -175,7 +175,7 @@ func (receiver *SheetsAPI) GetColumnValuesAsString(spreadsheetId, a1Notation str
 	return columnValues
 }
 
-func (receiver *SheetsAPI) GetByTabName(spreadsheet *sheets.Spreadsheet, tabName string) *sheets.Sheet {
+func (receiver *SheetsAPI) GetByTabName(spreadsheet sheets.Spreadsheet, tabName string) *sheets.Sheet {
 	for _, sheet := range spreadsheet.Sheets {
 		if sheet.Properties.Title == tabName {
 			return sheet
