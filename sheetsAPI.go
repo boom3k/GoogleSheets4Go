@@ -85,8 +85,8 @@ func (receiver *SheetsAPI) RenameSpreadSheet(spreadsheetId, newTitle string) (*s
 	return response.UpdatedSpreadsheet, err
 }
 
-func (receiver *SheetsAPI) InsertTab(spreadsheetId, newtabName string) *sheets.BatchUpdateSpreadsheetResponse {
-	properties := &sheets.SheetProperties{Title: newtabName}
+func (receiver *SheetsAPI) InsertTab(spreadsheetId, newTabName string) *sheets.BatchUpdateSpreadsheetResponse {
+	properties := &sheets.SheetProperties{Title: newTabName}
 	addSheetsRequest := &sheets.AddSheetRequest{Properties: properties}
 	request := []*sheets.Request{{AddSheet: addSheetsRequest}}
 	content := &sheets.BatchUpdateSpreadsheetRequest{Requests: request}
@@ -97,11 +97,16 @@ func (receiver *SheetsAPI) InsertTab(spreadsheetId, newtabName string) *sheets.B
 	return response
 }
 
-func (receiver *SheetsAPI) RenameTab(spreadsheetId, newTabName string, tabID int64) (*sheets.BatchUpdateSpreadsheetResponse, error) {
+func (receiver *SheetsAPI) RenameTabById(spreadsheetId, newTabName string, tabID int64) (*sheets.BatchUpdateSpreadsheetResponse, error) {
 	sheetProperties := &sheets.SheetProperties{Title: newTabName, SheetId: tabID}
 	updateSheetPropertiesRequest := &sheets.UpdateSheetPropertiesRequest{Properties: sheetProperties, Fields: "title"}
 	requests := []*sheets.Request{{UpdateSheetProperties: updateSheetPropertiesRequest}}
 	return receiver.ExecuteBatchUpdateRequest(spreadsheetId, requests)
+}
+
+func (receiver *SheetsAPI) RenameTab(spreadsheet sheets.Spreadsheet, oldTabName, newTabName string) {
+	tab := receiver.GetByTabName(spreadsheet, oldTabName)
+	receiver.RenameTabById(spreadsheet.SpreadsheetId, newTabName, tab.Properties.SheetId)
 }
 
 func (receiver *SheetsAPI) DeleteTabById(spreadsheetId string, tabId int64) (*sheets.BatchUpdateSpreadsheetResponse, error) {
