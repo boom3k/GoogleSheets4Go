@@ -27,6 +27,12 @@ func (receiver *SheetsAPI) Build(client *http.Client, subject string, context co
 	return receiver
 }
 
+func BuildNewSheetsAPI(client *http.Client, subject string, context context.Context) *SheetsAPI {
+	newSheetsAPI := &SheetsAPI{}
+	newSheetsAPI.Build(client, subject, context)
+	return newSheetsAPI
+}
+
 type SheetsAPI struct {
 	Service *sheets.Service
 	Subject string
@@ -40,8 +46,7 @@ func (receiver *SheetsAPI) PrintToSheet(spreadsheetId, a1Notation, majorDimensio
 	if overwrite == true {
 		response, err := receiver.Service.Spreadsheets.Values.Update(spreadsheetId, a1Notation, &valueRange).ValueInputOption("RAW").Do()
 		if err != nil {
-			log.Println(err.Error())
-			panic(err)
+			log.Fatalf(err.Error())
 		}
 		return response
 	}
@@ -53,7 +58,7 @@ func (receiver *SheetsAPI) PrintToSheet(spreadsheetId, a1Notation, majorDimensio
 			time.Sleep(time.Millisecond * 2500)
 			return receiver.PrintToSheet(spreadsheetId, a1Notation, majorDimension, values, overwrite)
 		}
-		panic(err)
+		log.Fatal(err.Error())
 	}
 	log.Println("Spreadsheet write request was successful...")
 	return response
