@@ -75,6 +75,13 @@ func (receiver *SheetsAPI) CreateSpreadsheet(spreadtabName string) *sheets.Sprea
 	return response
 }
 
+func (receiver *SheetsAPI) CreateAndPrintToSheet(spreadsheetName, tabName string, values [][]interface{}) {
+	log.Printf("Creating spreadsheet: %s\n", spreadsheetName)
+	spreadsheet := receiver.CreateSpreadsheet(spreadsheetName)
+	receiver.RenameTab(*spreadsheet, spreadsheet.Sheets[0].Properties.Title, tabName)
+	receiver.PrintToSheet(spreadsheet.SpreadsheetId, tabName, "ROWS", values, false)
+}
+
 func (receiver *SheetsAPI) RenameSpreadSheet(spreadsheetId, newTitle string) (*sheets.Spreadsheet, error) {
 
 	spreadsheetProperties := &sheets.SpreadsheetProperties{Title: newTitle}
