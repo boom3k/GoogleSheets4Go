@@ -2,7 +2,10 @@ package googlesheets4go
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 	"log"
 	"net/http"
@@ -13,24 +16,41 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
-func (receiver *SheetsAPI) Build(client *http.Client, subject string, context context.Context) *SheetsAPI {
-	service, err := sheets.NewService(context, option.WithHTTPClient(client))
+func BuildApiUsingOAuth2(subject string, scopes []string, clientSecret, authorizationToken []byte, ctx context.Context) *SheetsAPI {
+	config, err := google.ConfigFromJSON(clientSecret, scopes...)
+	if err != nil {
+		log.Println(err.Error())
+		panic(err)
+	}
+	token := &oauth2.Token{}
+	err = json.Unmarshal(authorizationToken, token)
+	if err != nil {
+		log.Println(err.Error())
+		panic(err)
+	}
+	client := config.Client(context.Background(), token)
+	return BuildAPI(client, subject, ctx)
+}
+
+func BuildApiUsingImpersonation(subject string, scopes []string, serviceAccountKey []byte, ctx context.Context) *SheetsAPI {
+	jwt, err := google.JWTConfigFromJSON(serviceAccountKey, scopes...)
+	if err != nil {
+		log.Println(err.Error())
+		panic(err)
+	}
+	jwt.Subject = subject
+	return BuildAPI(jwt.Client(ctx), subject, ctx)
+}
+
+func BuildAPI(client *http.Client, subject string, ctx context.Context) *SheetsAPI {
+	newDriveAPI := &SheetsAPI{}
+	service, err := sheets.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	receiver.Service = service
-	receiver.Subject = subject
-	log.Printf("SheetAPI --> \n"+
-		"\tService: %s\n"+
-		"\tUserEmail: %s\n", receiver.Service.BasePath, receiver.Subject,
-	)
-	return receiver
-}
-
-func BuildNewSheetsAPI(client *http.Client, subject string, context context.Context) *SheetsAPI {
-	newSheetsAPI := &SheetsAPI{}
-	newSheetsAPI.Build(client, subject, context)
-	return newSheetsAPI
+	newDriveAPI.Service = service
+	newDriveAPI.Subject = subject
+	return newDriveAPI
 }
 
 type SheetsAPI struct {
